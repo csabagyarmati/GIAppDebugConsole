@@ -12,14 +12,14 @@ final public class GIToast: UIView {
         let v = UIView()
         v.backgroundColor = UIColor.black.withAlphaComponent(0.5)
         return v
-    }
+    }()
     
     private let label: UILabel = {
         let lbl = UILabel()
         lbl.translatesAutoresizingMaskIntoConstraints = false
         lbl.textColor = UIColor.white
         lbl.font = .systemFont(ofSize: 13)
-        lbl.lines = 0
+        lbl.numberOfLines = 0
         return lbl
     }()
 
@@ -53,7 +53,7 @@ private extension GIToast {
     
     func setupBackground() {
         self.addSubview(bgView)
-        bgView.pin(to self)
+        bgView.pin(to: self)
     }
     
     func setupLabel() {
@@ -73,17 +73,21 @@ private extension GIToast {
     }
 }
 
-private extension GIToast {
+public extension GIToast {
     
-    func showToast(with text: String, hideAfter delay: TimeInterval = 2) {
+    public func showToast(with text: String, hideAfter delay: TimeInterval = 2) {
         label.text = text
         showToast(hideAfter: delay)
     }
     
-    func showToast(with attributedText: NSAttributedString, hideAfter delay: TimeInterval = 2) {
+    public func showToast(with attributedText: NSAttributedString, hideAfter delay: TimeInterval = 2) {
         label.attributedText = attributedText
         showToast(hideAfter: delay)
     }
+    
+}
+
+private extension GIToast {
     
     private func showToast(hideAfter delay: TimeInterval) {
         self.alpha = 0
