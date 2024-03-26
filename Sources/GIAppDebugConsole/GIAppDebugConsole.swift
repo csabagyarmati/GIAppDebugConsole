@@ -78,6 +78,8 @@ final public class GIAppDebugConsole: NSObject, UIGestureRecognizerDelegate {
         uiConfigurator.createMenuButton(parentSize: consoleView.bounds.size)
     }()
     
+    private lazy var toast: GIToast = GIToast(parentView: consoleView)
+    
     
     // MARK: - API
     
@@ -124,7 +126,6 @@ final public class GIAppDebugConsole: NSObject, UIGestureRecognizerDelegate {
         menuButton.giMenu?.addAction(action)
     }
     
-
     // MARK: - UIGestureRecognizerDelegate
     
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
@@ -137,6 +138,14 @@ final public class GIAppDebugConsole: NSObject, UIGestureRecognizerDelegate {
         return false
     }
     
+    /// Copy text with link
+    public static func createCopyLink(from string: String) -> URL? {
+        guard let data = string.data(using: .utf8) else { return nil }
+        let base64String = data.base64EncodedString()
+        guard let url = URL(string: "copy://data?base64=\(base64String)") else { return nil }
+        return url
+    }
+
 }
 
 
@@ -149,6 +158,8 @@ private extension GIAppDebugConsole {
         consoleWindow.addSubview(consoleView)
         consoleView.addSubview(consoleTextView)
         consoleView.addSubview(menuButton)
+        
+        consoleTextView.delegate = self
         
         menuButton.giMenu = makeMenu()
     }
@@ -288,6 +299,46 @@ private extension GIAppDebugConsole {
     func updateTextViewFrame() {
         consoleTextView.frame = consoleView.bounds.inset(by: .init(top: 8, left: 8,
                                                                    bottom: 8, right: 8))
+    }
+    
+}
+
+
+// MARK: UITextView delegate
+extension GIAppDebugConsole: UITextViewDelegate {
+    
+    public func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
+        if let copiedText = getCopiedTextFromURL(URL) {
+            UIPasteboard.general.string = copiedText
+            toast.showToast(with: "Copied to clipboard.", hideAfter: 2)
+            return false
+        }
+        
+        return true
+    }
+    
+    public func textViewDidChangeSelection(_ textView: UITextView) {
+        textView.selectedTextRange = nil
+    }
+    
+}
+
+extension GIAppDebugConsole {
+    
+    func getCopiedTextFromURL(_ url: URL) -> String? {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else { return nil }
+        guard let scheme = components.scheme, scheme == "copy" else { return nil }
+        guard let host = components.host, host == "data" else { return nil }
+        guard let queryItems = components.queryItems else { return nil }
+        for queryItem in queryItems {
+            if queryItem.name == "base64", let value = queryItem.value {
+                if let data = Data(base64Encoded: value), let decoded = String(data: data, encoding: .utf8) {
+                    return decoded
+                }
+            }
+        }
+        
+        return nil
     }
     
 }

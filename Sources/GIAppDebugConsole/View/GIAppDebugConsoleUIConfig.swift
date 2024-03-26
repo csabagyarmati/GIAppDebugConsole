@@ -18,6 +18,8 @@ public struct GIAppDebugConsoleUIConfig {
     var textColor: UIColor
     var font: UIFont
     
+    var linkAttributes: [NSAttributedString.Key : Any]
+    
     var menuButtonConfig: MenuButtonConfig
     
     var consoleFrame: CGRect {
@@ -36,6 +38,8 @@ public struct GIAppDebugConsoleUIConfig {
                 consoleBackgroundColor: UIColor = .black,
                 textColor: UIColor = .white,
                 font: UIFont = .systemFont(ofSize: 13, weight: .regular),
+                linkAttributes: [NSAttributedString.Key : Any] = [NSAttributedString.Key.foregroundColor: UIColor.white,
+                                                                  NSAttributedString.Key.underlineStyle: NSUnderlineStyle.single.rawValue],
                 menuButtonConfig: GIAppDebugConsoleUIConfig.MenuButtonConfig = .init())
     {
         self.consoleInitialPosition = consoleInitialPosition
@@ -44,6 +48,7 @@ public struct GIAppDebugConsoleUIConfig {
         self.consoleBackgroundColor = consoleBackgroundColor
         self.textColor = textColor
         self.font = font
+        self.linkAttributes = linkAttributes
         self.menuButtonConfig = menuButtonConfig
     }
     

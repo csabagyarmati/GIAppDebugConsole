@@ -31,7 +31,7 @@ class AppDebugConsoleUIConfigurator {
         let txtView = UITextView()
         txtView.frame = parentFrame.inset(by: .init(top: 8, left: 8, bottom: 8, right: 8))
         txtView.isEditable = false
-        txtView.isSelectable = false
+        txtView.isSelectable = true
         txtView.textContainerInset = UIEdgeInsets(top: 0, left: 4, bottom: 4, right: 10)
         txtView.contentInsetAdjustmentBehavior = .never
         txtView.backgroundColor = .clear
@@ -39,6 +39,8 @@ class AppDebugConsoleUIConfigurator {
         
         txtView.textColor = consoleUIConfig.textColor
         txtView.font = consoleUIConfig.font
+        
+        txtView.linkTextAttributes = consoleUIConfig.linkAttributes
         
         return txtView
     }
