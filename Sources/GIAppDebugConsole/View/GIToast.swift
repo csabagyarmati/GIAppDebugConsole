@@ -10,18 +10,21 @@ final public class GIToast: UIView {
     
     private let bgView: UIView = {
         let v = UIView()
-        v.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        v.backgroundColor = .lightGray
         return v
     }()
     
     private let label: UILabel = {
         let lbl = UILabel()
         lbl.translatesAutoresizingMaskIntoConstraints = false
-        lbl.textColor = UIColor.white
+        lbl.textColor = .darkText
         lbl.font = .systemFont(ofSize: 13)
         lbl.numberOfLines = 0
         return lbl
     }()
+    
+    private var dispatchWorkItem: DispatchWorkItem?
+    private var isVisible = false
 
     // MARK: - Init
     
@@ -49,6 +52,7 @@ private extension GIToast {
         self.translatesAutoresizingMaskIntoConstraints = false
         self.backgroundColor = .clear
         self.layer.cornerRadius = 12
+        self.layer.masksToBounds = true
     }
     
     func setupBackground() {
@@ -58,17 +62,16 @@ private extension GIToast {
     
     func setupLabel() {
         self.addSubview(label)
-        label.pin(to: self,
-                  edges: .init(top: 8, left: 8, bottom: 8, right: 8))
+        label.pin(to: self, edges: .createWith(inset: 8))
     }
 
     func addToast(on parentView: UIView) {
         parentView.addSubview(self)
         
         NSLayoutConstraint.activate([
-            parentView.topAnchor.constraint(equalTo: self.topAnchor, constant: 8),
-            parentView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 8),
-            self.trailingAnchor.constraint(equalTo: parentView.trailingAnchor, constant: 8)
+            parentView.topAnchor.constraint(equalTo: self.topAnchor, constant: -8),
+            parentView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: -8),
+            self.trailingAnchor.constraint(equalTo: parentView.trailingAnchor, constant: -8)
         ])
     }
 }
@@ -90,8 +93,15 @@ public extension GIToast {
 private extension GIToast {
     
     private func showToast(hideAfter delay: TimeInterval) {
+        if isVisible {
+            self.dispatchWorkItem?.cancel()
+            self.dispatchWorkItem = nil
+            self.layer.removeAllAnimations()
+        }
+        
         self.alpha = 0
         self.isHidden = false
+        self.isVisible = true
 
         UIView.animate(withDuration: 0.4,
                        delay: 0,
@@ -99,16 +109,26 @@ private extension GIToast {
             self.alpha = 1
         } completion: { finished in
             if finished {
-                DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: {
+                self.dispatchWorkItem = DispatchWorkItem(block: {
                     self.hideToast()
                 })
+                if let dispatchWorkItem = self.dispatchWorkItem {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: dispatchWorkItem)
+                }
             }
         }
 
     }
     
     func hideToast() {
-        self.isHidden = true
+        UIView.animate(withDuration: 0.2,
+                       delay: 0,
+                       options: .curveEaseInOut) {
+            self.alpha = 0
+        } completion: { finished in
+            self.isHidden = true
+            self.isVisible = false
+        }
     }
 
 }
