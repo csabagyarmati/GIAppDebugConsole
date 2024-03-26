@@ -70,6 +70,14 @@ final public class GIAppDebugConsole: NSObject, UIGestureRecognizerDelegate {
         return longPressRecognizer
     }()
     
+    private lazy var doubleTapRecognizer: UITapGestureRecognizer = {
+        let doubleTapRecognizer = UITapGestureRecognizer(target: self,
+                                                         action: #selector(handleDoubleTap(recognizer:)))
+        doubleTapRecognizer.numberOfTapsRequired = 2
+        doubleTapRecognizer.numberOfTouchesRequired = 1
+        return doubleTapRecognizer
+    }()
+    
     private lazy var consoleTextView: UITextView = {
         uiConfigurator.createConsoleTextView(parentFrame: consoleView.bounds)
     }()
@@ -79,6 +87,9 @@ final public class GIAppDebugConsole: NSObject, UIGestureRecognizerDelegate {
     }()
     
     private lazy var toast: GIToast = GIToast(parentView: consoleView)
+    
+    private var originalSize: CGSize = .zero
+    private var minimized = false
     
     
     // MARK: - API
@@ -162,6 +173,7 @@ private extension GIAppDebugConsole {
         consoleTextView.delegate = self
         
         menuButton.giMenu = makeMenu()
+        menuButton.addGestureRecognizer(doubleTapRecognizer)
     }
     
     func configConsoleView(_ viewConsole: UIView) {
@@ -257,6 +269,24 @@ private extension GIAppDebugConsole {
         updateMenuButtonFrame()
         updateTextViewFrame()
     }
+    
+    @objc func handleDoubleTap(recognizer: UITapGestureRecognizer) {
+        if minimized {
+            consoleView.frame.origin = CGPoint(x: consoleView.frame.maxX - originalSize.width,
+                                               y: consoleView.frame.maxY - originalSize.height)
+            consoleView.frame.size = originalSize
+        } else {
+            originalSize = consoleView.frame.size
+            var menuButtonSize = uiConfigurator.consoleUIConfig.menuButtonConfig.size
+            consoleView.frame.origin = CGPoint(x: consoleView.frame.maxX - menuButtonSize.width - 16,
+                                               y: consoleView.frame.maxY - menuButtonSize.height - 16)
+            consoleView.frame.size = CGSize(width: menuButtonSize.width + 16,
+                                            height: menuButtonSize.height + 16)
+        }
+        minimized.toggle()
+        updateMenuButtonFrame()
+        updateTextViewFrame()
+    }
 }
 
 
@@ -297,6 +327,7 @@ private extension GIAppDebugConsole {
     }
     
     func updateTextViewFrame() {
+        consoleTextView.isHidden = minimized
         consoleTextView.frame = consoleView.bounds.inset(by: .init(top: 8, left: 8,
                                                                    bottom: 8, right: 8))
     }
